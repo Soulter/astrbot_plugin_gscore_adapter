@@ -186,8 +186,9 @@ class GsCoreAdapter(Star):
         )
         pm = 1 if event.is_admin() else 6
 
+        platform_id = event.get_platform_id()
         msg = MessageReceive(
-            bot_id='onebot' if pn == 'aiocqhttp' else pn,
+            bot_id=platform_id,
             bot_self_id=self_id,
             user_type=user_type,
             group_id=event.get_group_id(),
@@ -210,12 +211,12 @@ class GsCoreAdapter(Star):
             await self.ws.send(msg_send)
 
     async def start(self):
-        recv_task = asyncio.create_task(self.recv_msg())
-        send_task = asyncio.create_task(self.send_msg())
-        _, self.pending = await asyncio.wait(
-            [recv_task, send_task],
-            return_when=asyncio.FIRST_COMPLETED,
-        )
+        asyncio.create_task(self.recv_msg())
+        asyncio.create_task(self.send_msg())
+        # _, self.pending = await asyncio.wait(
+        #     [recv_task, send_task],
+        #     return_when=asyncio.FIRST_COMPLETED,
+        # )
 
     async def recv_msg(self):
         try:
@@ -236,7 +237,7 @@ class GsCoreAdapter(Star):
                                 getattr(logger, _type)(_data.data)
                         continue
 
-                    bid = msg.bot_id if msg.bot_id != 'onebot' else 'aiocqhttp'
+                    bid = msg.bot_id
                     if bid == 'aiocqhttp' or bid == 'dingtalk':
                         session_id = msg.target_id
                     elif bid == 'lark':
