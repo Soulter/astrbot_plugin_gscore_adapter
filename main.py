@@ -188,8 +188,9 @@ class GsCoreAdapter(Star):
 
         platform_id = event.get_platform_id()
         msg = MessageReceive(
-            bot_id=platform_id,
-            bot_self_id=self_id,
+            # bot_id在gscore内部数据库具有唯一标识符，修改将会造成breaking change
+            bot_id='onebot' if pn == 'aiocqhttp' else pn,
+            bot_self_id=platform_id,
             user_type=user_type,
             group_id=event.get_group_id(),
             user_id=user_id,
@@ -249,9 +250,13 @@ class GsCoreAdapter(Star):
                     else:
                         session_id = msg.msg_id
 
+                    if session_id is None:
+                        logger.warning(f'[GsCore] 消息{msg}没有session_id')
+                        continue
+
                     if msg.target_id and msg.content:
                         session = MessageSesion(
-                            bid,
+                            msg.bot_self_id,
                             (
                                 MessageType.GROUP_MESSAGE
                                 if msg.target_type == 'group'
